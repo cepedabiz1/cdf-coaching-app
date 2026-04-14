@@ -288,7 +288,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
 
 <script type="text/babel">
-const { useState, useEffect, useCallback } = React;
+const { useState, useEffect, useCallback, useMemo } = React;
 
 // ==============================
 // TEST DATA — Week 14 (Herby Jacques case)
@@ -837,7 +837,19 @@ function App() {
     const [currentCard, setCurrentCard] = useState(0);
     const [phase, setPhase] = useState('cards'); // cards | ack | done
     const [cardStartTimes, setCardStartTimes] = useState([]);
-    const data = COACHING_DATA;
+    // Load data from URL parameter if present, otherwise use hardcoded sample
+    const data = useMemo(() => {
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const dataParam = urlParams.get('data');
+            if (dataParam) {
+                return JSON.parse(atob(dataParam));
+            }
+        } catch (e) {
+            console.error('Failed to parse URL data:', e);
+        }
+        return COACHING_DATA;
+    }, []);
     const totalCards = 6;
 
     useEffect(() => {
