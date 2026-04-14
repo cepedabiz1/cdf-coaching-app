@@ -67,6 +67,24 @@ const FEEDBACK_CATEGORIES = {
 };
 
 // ============================================================
+// CATEGORY NORMALIZER — maps Amazon CDF page labels to engine keys
+// ============================================================
+const CATEGORY_ALIASES = {
+    'Delivered to Wrong Address': 'DA delivered to wrong address',
+    'Never Received Delivery': 'Package was not in the location indicated by the photo',
+    'DA Mishandled Package': 'DA mishandled my package',
+    'DA was Unprofessional': 'DA was unprofessional',
+    'Driver walked on grass/mulch': 'DA drove on my lawn/grass/plants/mulch',
+    'DA did not follow my delivery instructions': 'DA did not follow my delivery instructions',
+    'Package not delivered according to instruction notes I provided': 'DA did not follow my delivery instructions',
+    'Package not left in specific place I requested': 'DA did not follow my delivery instructions'
+};
+
+function normalizeCategory(rawCategory) {
+    return CATEGORY_ALIASES[rawCategory] || rawCategory;
+}
+
+// ============================================================
 // DECISION RULES
 // ============================================================
 
@@ -77,7 +95,6 @@ const FEEDBACK_CATEGORIES = {
  */
 function classifyCase(caseData) {
     const {
-        feedback_category,
         feedback_detail,
         customer_notes,
         safe_delivery_location,
@@ -86,6 +103,9 @@ function classifyCase(caseData) {
         pod_photo_description,
         address
     } = caseData;
+
+    // Normalize the category to match engine keys
+    const feedback_category = normalizeCategory(caseData.feedback_category);
 
     const reasons = [];
     let disputeScore = 0;
@@ -660,7 +680,9 @@ if (typeof module !== 'undefined' && module.exports) {
         buildDisputeSubmission,
         processWeeklyCases,
         getCoachingGuidance,
-        FEEDBACK_CATEGORIES
+        FEEDBACK_CATEGORIES,
+        normalizeCategory,
+        CATEGORY_ALIASES
     };
 } else {
     window.CDFEngine = {
@@ -670,6 +692,8 @@ if (typeof module !== 'undefined' && module.exports) {
         buildDisputeSubmission,
         processWeeklyCases,
         getCoachingGuidance,
-        FEEDBACK_CATEGORIES
+        FEEDBACK_CATEGORIES,
+        normalizeCategory,
+        CATEGORY_ALIASES
     };
 }
