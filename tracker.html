@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPRC Coaching Tracker</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-dark: #0F172A;
+            --bg-card: #1E293B;
+            --bg-row-alt: #162032;
+            --text-primary: #F8FAFC;
+            --text-secondary: #94A3B8;
+            --text-muted: #64748B;
+            --border: #334155;
+            --turquoise: #06B6D4;
+            --yellow: #D97706;
+            --orange: #EA580C;
+            --red: #DC2626;
+            --green: #10B981;
+            --pink: #EC4899;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .header-left h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        .header-left p {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-top: 4px;
+        }
+
+        /* Summary Cards */
+        .summary-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .summary-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            text-align: center;
+        }
+        .summary-card .number {
+            font-size: 2rem;
+            font-weight: 800;
+        }
+        .summary-card .label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 4px;
+        }
+
+        /* Filters */
+        .filters {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .filter-btn:hover { border-color: var(--turquoise); color: var(--text-primary); }
+        .filter-btn.active { background: var(--turquoise); color: #000; border-color: var(--turquoise); }
+
+        /* Table */
+        .table-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th {
+            text-align: left;
+            padding: 14px 16px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+            background: rgba(0,0,0,0.2);
+        }
+        td {
+            padding: 12px 16px;
+            font-size: 0.85rem;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+        tr:last-child td { border-bottom: none; }
+        tr:nth-child(even) td { background: var(--bg-row-alt); }
+        tr:hover td { background: rgba(6, 182, 212, 0.05); }
+
+        /* Status Badges */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        .badge-acknowledged { background: rgba(16,185,129,0.15); color: var(--green); }
+        .badge-pending { background: rgba(217,119,6,0.15); color: var(--yellow); }
+        .badge-overdue { background: rgba(220,38,38,0.15); color: var(--red); }
+
+        /* Severity Dots */
+        .severity-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .sev-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        /* Week Selector */
+        .week-select {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+        .week-select:focus { outline: none; border-color: var(--turquoise); }
+
+        /* Driver name link */
+        .driver-link {
+            color: var(--turquoise);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .driver-link:hover { text-decoration: underline; }
+
+        /* Time remaining */
+        .time-remaining { font-size: 0.75rem; color: var(--text-muted); }
+        .time-remaining.urgent { color: var(--red); font-weight: 600; }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+        .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
+        .empty-state p { font-size: 0.9rem; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .table-container { overflow-x: auto; }
+            table { min-width: 700px; }
+            .header { flex-direction: column; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<script type="text/babel">
+const { useState, useMemo, useEffect } = React;
+
+// ─── Severity Config ───
+const SEVERITY = {
+    1: { label: "1st Coaching", color: "#06B6D4" },
+    2: { label: "2nd Coaching", color: "#D97706" },
+    3: { label: "Written Warning", color: "#EA580C" },
+    4: { label: "Final Warning", color: "#DC2626" },
+    5: { label: "Termination", color: "#111827" }
+};
+
+// ─── Sample Data (replaced by pipeline output in production) ───
+const SAMPLE_DATA = [
+    {
+        sessionId: "COACH-2026-W14-001",
+        week: "W14",
+        date: "2026-04-14",
+        driver: "Herby Jacques",
+        transporterId: "A7A3Z09CH0EKT",
+        severity: 1,
+        category: "Did not follow delivery instructions",
+        status: "pending",
+        assignedManager: "Team Lead A",
+        acknowledgedDate: null,
+        coachingUrl: "https://cepedabiz1.github.io/cdf-coaching-app/",
+        dueDate: "2026-04-17"
+    },
+    {
+        sessionId: "COACH-2026-W14-002",
+        week: "W14",
+        date: "2026-04-14",
+        driver: "Enrique Salas M",
+        transporterId: "A3CYUV33XB8I8P",
+        severity: 1,
+        category: "Behavior complaint",
+        status: "acknowledged",
+        assignedManager: "Team Lead A",
+        acknowledgedDate: "2026-04-15",
+        coachingUrl: "https://cepedabiz1.github.io/cdf-coaching-app/",
+        dueDate: "2026-04-17"
+    },
+    {
+        sessionId: "COACH-2026-W14-003",
+        week: "W14",
+        date: "2026-04-14",
+        driver: "Jose Rodriguez",
+        transporterId: "A1BCD2EFG3HIJ",
+        severity: 2,
+        category: "Package not in photo location",
+        status: "overdue",
+        assignedManager: "Team Lead B",
+        acknowledgedDate: null,
+        coachingUrl: "https://cepedabiz1.github.io/cdf-coaching-app/",
+        dueDate: "2026-04-11"
+    }
+];
+
+// ─── Helper Functions ───
+function getStatusBadge(status) {
+    const classes = {
+        acknowledged: "badge-acknowledged",
+        pending: "badge-pending",
+        overdue: "badge-overdue"
+    };
+    return <span className={`badge ${classes[status]}`}>{status}</span>;
+}
+
+function getDaysRemaining(dueDate, status) {
+    if (status === "acknowledged") return null;
+    const now = new Date();
+    const due = new Date(dueDate);
+    const diff = Math.ceil((due - now) / (1000 * 60 * 60 * 24));
+    if (diff < 0) return <span className="time-remaining urgent">{Math.abs(diff)}d overdue</span>;
+    if (diff === 0) return <span className="time-remaining urgent">Due today</span>;
+    if (diff <= 2) return <span className="time-remaining urgent">{diff}d left</span>;
+    return <span className="time-remaining">{diff}d left</span>;
+}
+
+// ─── Main App ───
+function TrackerApp() {
+    const [sessions, setSessions] = useState([]);
+    const [filter, setFilter] = useState("all");
+    const [selectedWeek, setSelectedWeek] = useState("all");
+
+    useEffect(() => {
+        // In production, this loads from URL params or API
+        // Check for data in URL
+        const params = new URLSearchParams(window.location.search);
+        const dataParam = params.get("data");
+        if (dataParam) {
+            try {
+                const decoded = JSON.parse(atob(dataParam));
+                setSessions(decoded);
+                return;
+            } catch(e) { /* fall through to sample data */ }
+        }
+
+        // Check localStorage for saved sessions
+        try {
+            const saved = window.__TRACKER_DATA__;
+            if (saved && Array.isArray(saved)) {
+                setSessions(saved);
+                return;
+            }
+        } catch(e) {}
+
+        // Default: use sample data
+        setSessions(SAMPLE_DATA);
+    }, []);
+
+    // Get unique weeks
+    const weeks = useMemo(() => {
+        const w = [...new Set(sessions.map(s => s.week))].sort().reverse();
+        return w;
+    }, [sessions]);
+
+    // Filter sessions
+    const filtered = useMemo(() => {
+        let result = sessions;
+        if (filter !== "all") result = result.filter(s => s.status === filter);
+        if (selectedWeek !== "all") result = result.filter(s => s.week === selectedWeek);
+        return result;
+    }, [sessions, filter, selectedWeek]);
+
+    // Summary stats
+    const stats = useMemo(() => {
+        const total = sessions.length;
+        const acknowledged = sessions.filter(s => s.status === "acknowledged").length;
+        const pending = sessions.filter(s => s.status === "pending").length;
+        const overdue = sessions.filter(s => s.status === "overdue").length;
+        const rate = total > 0 ? Math.round((acknowledged / total) * 100) : 0;
+        return { total, acknowledged, pending, overdue, rate };
+    }, [sessions]);
+
+    return (
+        <div>
+            {/* Header */}
+            <div className="header">
+                <div className="header-left">
+                    <h1>Coaching Acknowledgment Tracker</h1>
+                    <p>SPRC Driver Performance Management — Station DNJ4</p>
+                </div>
+                <select
+                    className="week-select"
+                    value={selectedWeek}
+                    onChange={e => setSelectedWeek(e.target.value)}
+                >
+                    <option value="all">All Weeks</option>
+                    {weeks.map(w => <option key={w} value={w}>{w}</option>)}
+                </select>
+            </div>
+
+            {/* Summary Cards */}
+            <div className="summary-row">
+                <div className="summary-card">
+                    <div className="number" style={{color: "var(--turquoise)"}}>{stats.total}</div>
+                    <div className="label">Total Sessions</div>
+                </div>
+                <div className="summary-card">
+                    <div className="number" style={{color: "var(--green)"}}>{stats.acknowledged}</div>
+                    <div className="label">Acknowledged</div>
+                </div>
+                <div className="summary-card">
+                    <div className="number" style={{color: "var(--yellow)"}}>{stats.pending}</div>
+                    <div className="label">Pending</div>
+                </div>
+                <div className="summary-card">
+                    <div className="number" style={{color: "var(--red)"}}>{stats.overdue}</div>
+                    <div className="label">Overdue</div>
+                </div>
+                <div className="summary-card">
+                    <div className="number" style={{color: stats.rate >= 80 ? "var(--green)" : stats.rate >= 50 ? "var(--yellow)" : "var(--red)"}}>
+                        {stats.rate}%
+                    </div>
+                    <div className="label">Completion Rate</div>
+                </div>
+            </div>
+
+            {/* Filters */}
+            <div className="filters">
+                {["all", "pending", "acknowledged", "overdue"].map(f => (
+                    <button
+                        key={f}
+                        className={`filter-btn ${filter === f ? 'active' : ''}`}
+                        onClick={() => setFilter(f)}
+                    >
+                        {f === "all" ? "All" : f.charAt(0).toUpperCase() + f.slice(1)}
+                        {f !== "all" && ` (${sessions.filter(s => s.status === f).length})`}
+                    </button>
+                ))}
+            </div>
+
+            {/* Table */}
+            <div className="table-container">
+                {filtered.length === 0 ? (
+                    <div className="empty-state">
+                        <div className="icon">&#9745;</div>
+                        <p>No coaching sessions match this filter</p>
+                    </div>
+                ) : (
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Driver</th>
+                                <th>Session ID</th>
+                                <th>Severity</th>
+                                <th>Category</th>
+                                <th>Date Issued</th>
+                                <th>Status</th>
+                                <th>Due / Acknowledged</th>
+                                <th>Manager</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filtered.map(s => (
+                                <tr key={s.sessionId}>
+                                    <td>
+                                        <a className="driver-link" href={s.coachingUrl} target="_blank" rel="noopener">
+                                            {s.driver}
+                                        </a>
+                                    </td>
+                                    <td style={{fontFamily: "monospace", fontSize: "0.75rem", color: "var(--text-muted)"}}>
+                                        {s.sessionId}
+                                    </td>
+                                    <td>
+                                        <span className="severity-indicator">
+                                            <span className="sev-dot" style={{background: SEVERITY[s.severity]?.color}} />
+                                            {SEVERITY[s.severity]?.label}
+                                        </span>
+                                    </td>
+                                    <td>{s.category}</td>
+                                    <td>{s.date}</td>
+                                    <td>{getStatusBadge(s.status)}</td>
+                                    <td>
+                                        {s.status === "acknowledged"
+                                            ? <span style={{color: "var(--green)"}}>{s.acknowledgedDate}</span>
+                                            : getDaysRemaining(s.dueDate, s.status)
+                                        }
+                                    </td>
+                                    <td style={{color: "var(--text-secondary)"}}>{s.assignedManager}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
+            </div>
+        </div>
+    );
+}
+
+ReactDOM.createRoot(document.getElementById("app")).render(<TrackerApp />);
+</script>
+</body>
+</html>

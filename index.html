@@ -44,7 +44,7 @@
         .loading-logo { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
         .loading-sub { color: var(--text-secondary); font-size: 0.9rem; }
         .loading-bar { width: 200px; height: 3px; background: var(--border); border-radius: 3px; margin-top: 2rem; overflow: hidden; }
-        .loading-bar-fill { height: 100%; width;: 0; border-radius: 3px; transition: width 0.8s ease; }
+        .loading-bar-fill { height: 100%; width: 0%; border-radius: 3px; transition: width 0.8s ease; }
 
         /* App Container */
         .app { position: fixed; inset: 0; display: flex; flex-direction: column; }
@@ -82,3 +82,790 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        .card-header {
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        .card-header::before {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+        }
+        .card-number { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.8; margin-bottom: 4px; }
+        .card-title { font-size: 1.3rem; font-weight: 700; }
+
+        .card-body { background: var(--bg-card); border-radius: 12px; padding: 20px; border: 1px solid var(--border); }
+        .card-body + .card-body { margin-top: 12px; }
+
+        .section-title {
+            font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em;
+            color: var(--text-muted); margin-bottom: 12px; font-weight: 600;
+        }
+
+        .data-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); }
+        .data-row:last-child { border-bottom: none; }
+        .data-label { color: var(--text-secondary); font-size: 0.85rem; }
+        .data-value { font-weight: 600; font-size: 0.85rem; text-align: right; max-width: 60%; }
+
+        .event-item {
+            background: rgba(255,255,255,0.03); border-radius: 8px;
+            padding: 14px; margin-bottom: 10px; border-left: 3px solid;
+        }
+        .event-detail { font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px; }
+        .event-tba { font-size: 0.75rem; color: var(--text-muted); margin-top: 6px; font-family: monospace; }
+        .event-quote { font-style: italic; color: var(--text-secondary); margin-top: 6px; font-size: 0.85rem; padding-left: 10px; border-left: 2px solid var(--text-muted); }
+
+        .trend-indicator { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+        .trend-up { background: rgba(220, 38, 38, 0.15); color: #FCA5A5; }
+        .trend-down { background: rgba(16, 185, 129, 0.15); color: #6EE7B7; }
+        .trend-stable { background: rgba(148, 163, 184, 0.15); color: #CBD5E1; }
+
+        .expectation-item { display: flex; gap: 12px; margin-bottom: 14px; align-items: flex-start; }
+        .expectation-num {
+            min-width: 24px; height: 24px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.75rem; font-weight: 700; margin-top: 2px;
+        }
+        .expectation-text { font-size: 0.9rem; line-height: 1.5; }
+
+        .impact-section { margin-bottom: 16px; }
+        .impact-title { font-size: 0.9rem; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+        .impact-item { display: flex; gap: 10px; margin-bottom: 8px; font-size: 0.85rem; line-height: 1.4; }
+        .impact-arrow { color: var(--text-muted); min-width: 16px; }
+
+        /* Escalation Path */
+        .escalation-path { padding: 0; }
+        .escalation-step {
+            display: flex; align-items: center; gap: 14px; padding: 12px 0;
+            position: relative;
+        }
+        .escalation-step::before {
+            content: ''; position: absolute; left: 15px; top: 40px; bottom: -12px;
+            width: 2px; background: var(--border);
+        }
+        .escalation-step:last-child::before { display: none; }
+        .escalation-dot {
+            width: 32px; height: 32px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.75rem; font-weight: 700; flex-shrink: 0;
+            border: 2px solid var(--border); background: var(--bg-dark);
+        }
+        .escalation-dot.completed { border-color: var(--text-muted); background: var(--text-muted); color: var(--bg-dark); }
+        .escalation-dot.current { border-width: 3px; box-shadow: 0 0 12px rgba(255,255,255,0.1); }
+        .escalation-dot.future { opacity: 0.4; }
+        .escalation-info { flex: 1; }
+        .escalation-label { font-weight: 600; font-size: 0.9rem; }
+        .escalation-range { font-size: 0.75rem; color: var(--text-muted); }
+        .escalation-current-badge {
+            font-size: 0.65rem; padding: 2px 8px; border-radius: 10px;
+            font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+        }
+
+        /* Support Message */
+        .support-msg {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(16, 185, 129, 0.02));
+            border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px;
+            padding: 16px; font-size: 0.9rem; line-height: 1.6; color: var(--text-secondary);
+        }
+
+        /* Occurrence Stats */
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .stat-box {
+            background: rgba(255,255,255,0.03); border-radius: 10px;
+            padding: 14px; text-align: center;
+        }
+        .stat-number { font-size: 1.6rem; font-weight: 800; }
+        .stat-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; }
+
+        /* Acknowledgment Screen */
+        .ack-screen { display: none; animation: fadeIn 0.3s ease; }
+        .ack-screen.active { display: block; }
+
+        .checkbox-item {
+            display: flex; align-items: flex-start; gap: 14px; padding: 16px;
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+            margin-bottom: 10px; cursor: pointer; transition: all 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .checkbox-item:active { transform: scale(0.98); }
+        .checkbox-item.checked { border-color: var(--success); background: rgba(16, 185, 129, 0.05); }
+
+        .custom-checkbox {
+            width: 24px; height: 24px; border: 2px solid var(--border); border-radius: 6px;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+            transition: all 0.2s ease; margin-top: 2px;
+        }
+        .checkbox-item.checked .custom-checkbox {
+            background: var(--success); border-color: var(--success);
+        }
+        .checkmark { display: none; color: white; font-size: 0.8rem; font-weight: 800; }
+        .checkbox-item.checked .checkmark { display: block; }
+        .checkbox-text { font-size: 0.9rem; line-height: 1.4; }
+
+        .ack-button {
+            width: 100%; padding: 16px; border: none; border-radius: 12px;
+            font-size: 1rem; font-weight: 700; cursor: pointer;
+            margin-top: 16px; transition: all 0.2s ease;
+            color: white; text-transform: uppercase; letter-spacing: 0.03em;
+        }
+        .ack-button:disabled {
+            background: var(--border) !important; color: var(--text-muted);
+            cursor: not-allowed; opacity: 0.6;
+        }
+        .ack-button:not(:disabled):active { transform: scale(0.98); }
+
+        /* Completion Screen */
+        .completion-screen { display: none; text-align: center; padding: 40px 20px; animation: fadeIn 0.5s ease; }
+        .completion-screen.active { display: block; }
+        .completion-icon { font-size: 4rem; margin-bottom: 16px; }
+        .completion-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 8px; }
+        .completion-sub { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5; margin-bottom: 24px; }
+        .completion-session { font-family: monospace; font-size: 0.8rem; color: var(--text-muted); padding: 10px; background: var(--bg-card); border-radius: 8px; }
+
+        /* Bottom Nav */
+        .bottom-nav {
+            padding: 12px 20px 24px 20px;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid var(--border);
+            display: flex; gap: 10px; z-index: 10;
+        }
+        .nav-btn {
+            flex: 1; padding: 14px; border: none; border-radius: 10px;
+            font-size: 0.9rem; font-weight: 600; cursor: pointer;
+            transition: all 0.15s ease; -webkit-tap-highlight-color: transparent;
+        }
+        .nav-btn:active { transform: scale(0.97); }
+        .nav-btn.prev { background: var(--bg-card); color: var(--text-secondary); border: 1px solid var(--border); }
+        .nav-btn.next { color: white; }
+        .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        /* Dot indicators */
+        .dots { display: flex; justify-content: center; gap: 6px; padding: 8px 0; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); transition: all 0.3s ease; }
+        .dot.active { width: 24px; border-radius: 4px; }
+        .dot.completed { background: var(--text-muted); }
+    </style>
+</head>
+<body>
+
+<div id="app-root"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useCallback } = React;
+
+// ==============================
+// TEST DATA — Week 14 (Herby Jacques case)
+// ==============================
+const COACHING_DATA = {
+    session_id: "COACH-2026-W14-001",
+    date: "2026-04-14",
+    driver: {
+        name: "Herby Jacques",
+        transporter_id: "A7A3Z09CHQEKT",
+        hire_date: "2025-06-15",
+        tenure_days: 304
+    },
+    severity: {
+        level: 1,
+        label: "1st Coaching",
+        color: "#06B6D4",
+        bg: "rgba(37, 99, 235, 0.15)"
+    },
+    events_this_week: [
+        {
+            tracking_id: "TBA329740511568",
+            delivery_date: "2026-03-29",
+            address: "332 N 12th St, Surf City, NJ 08008",
+            feedback_category: "DA did not follow my delivery instructions",
+            feedback_detail: "Package not delivered according to instruction notes I provided",
+            customer_notes: "Not on stairs AT THE DOOR ONLY, Leave packages on the tables on the right side of the front door only. Do not leave packages at the top of the stairs or in the middle of the porch.",
+            safe_delivery_location: "Front door receive",
+            geopin_distance: 7.32
+        }
+    ],
+    counts: {
+        events_this_week: 1,
+        events_prior_week: 0,
+        events_90_day: 3,
+        coaching_sessions: 1,
+        remaining_before_next: 1,
+        oldest_event_date: "2026-02-15",
+        oldest_event_expires_days: 33,
+        window_start: "2026-01-15",
+        window_end: "2026-04-15"
+    },
+    trend: "DECLINING",
+    fleet_size: 62
+};
+
+// ==============================
+// SEVERITY CONFIG
+// ==============================
+const SEVERITY_CONFIG = {
+    1: { label: "1st Coaching", color: "#06B6D4", range: "1-3 events" },
+    2: { label: "2nd Coaching", color: "#D97706", range: "4-7 events" },
+    3: { label: "Warning", color: "#EA580C", range: "8-11 events" },
+    4: { label: "Final Warning", color: "#DC2626", range: "12-14 events" },
+    5: { label: "Termination Review", color: "#111827", range: "15+ events" }
+};
+
+// ==============================
+// CARD COMPONENTS
+// ==============================
+
+function Card1_CoachingType({ data }) {
+    const sev = data.severity;
+    return (
+        <div className="card active">
+            <div className="card-header" style={{ background: sev.color }}>
+                <div className="card-number">Card 1 of 6</div>
+                <div className="card-title">{sev.label}</div>
+            </div>
+            <div className="card-body">
+                <p style={{ fontSize: '0.95rem', lineHeight: 1.6, marginBottom: 16 }}>
+                    This coaching session is being issued based on your <strong>Customer Delivery Feedback (CDF)</strong> performance data.
+                </p>
+                <p style={{ fontSize: '0.95rem', lineHeight: 1.6, marginBottom: 20 }}>
+                    This is a formal <strong style={{ color: sev.color }}>{sev.label}</strong> in accordance with SPRC's Driver Performance Management Policy.
+                </p>
+                <div style={{ borderTop: `1px solid var(--border)`, paddingTop: 16 }}>
+                    <div className="data-row">
+                        <span className="data-label">Session ID</span>
+                        <span className="data-value" style={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>{data.session_id}</span>
+                    </div>
+                    <div className="data-row">
+                        <span className="data-label">Date</span>
+                        <span className="data-value">{data.date}</span>
+                    </div>
+                    <div className="data-row">
+                        <span className="data-label">Driver</span>
+                        <span className="data-value">{data.driver.name}</span>
+                    </div>
+                    <div className="data-row">
+                        <span className="data-label">Transporter ID</span>
+                        <span className="data-value" style={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>{data.driver.transporter_id}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function Card2_WhatHappened({ data }) {
+    const sev = data.severity;
+    const trendClass = data.trend === 'DECLINING' ? 'trend-up' : data.trend === 'IMPROVING' ? 'trend-down' : 'trend-stable';
+    const trendArrow = data.trend === 'DECLINING' ? '↗' : data.trend === 'IMPROVING' ? '↘' : '→';
+
+    return (
+        <div className="card active">
+            <div className="card-header" style={{ background: sev.color }}>
+                <div className="card-number">Card 2 of 6</div>
+                <div className="card-title">What Happened</div>
+            </div>
+
+            <div className="card-body">
+                <div className="section-title">This Week's CDF Events</div>
+                <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: 14 }}>
+                    You received <strong style={{ color: 'var(--text-primary)' }}>{data.counts.events_this_week}</strong> negative customer feedback event{data.counts.events_this_week > 1 ? 's' : ''} this week:
+                </p>
+                {data.events_this_week.map((evt, i) => (
+                    <div key={i} className="event-item" style={{ borderColor: sev.color }}>
+                        <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{evt.feedback_detail}</div>
+                        <div className="event-detail">{evt.address}</div>
+                        <div className="event-detail">{evt.delivery_date}</div>
+                        <div className="event-tba">{evt.tracking_id}</div>
+                        {evt.customer_notes && (
+                            <div className="event-quote">"{evt.customer_notes}"</div>
+                        )}
+                    </div>
+                ))}
+            </div>
+
+            <div className="card-body">
+                <div className="section-title">Your 90-Day Trend</div>
+                <div className="stat-grid">
+                    <div className="stat-box">
+                        <div className="stat-number" style={{ color: sev.color }}>{data.counts.events_this_week}</div>
+                        <div className="stat-label">This Week</div>
+                    </div>
+                    <div className="stat-box">
+                        <div className="stat-number">{data.counts.events_prior_week}</div>
+                        <div className="stat-label">Last Week</div>
+                    </div>
+                    <div className="stat-box">
+                        <div className="stat-number" style={{ color: sev.color }}>{data.counts.events_90_day}</div>
+                        <div className="stat-label">90-Day Total</div>
+                    </div>
+                    <div className="stat-box">
+                        <span className={`trend-indicator ${trendClass}`}>{trendArrow} {data.trend}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function Card3_Expectations({ data }) {
+    const sev = data.severity;
+    const expectations = [
+        "Read all customer delivery notes BEFORE approaching the delivery location",
+        "Follow customer placement instructions exactly as written — specific location, surface, or container",
+        "If instructions are unclear or contradictory, contact Driver Support before delivering",
+        "Take a clear Photo-On-Delivery (POD) that shows the package in the requested location"
+    ];
+
+    return (
+        <div className="card active">
+            <div className="card-header" style={{ background: sev.color }}>
+                <div className="card-number">Card 3 of 6</div>
+                <div className="card-title">Expectations</div>
+            </div>
+
+            <div className="card-body">
+                <div className="section-title">Amazon Standard Expectations</div>
+                {expectations.map((exp, i) => (
+                    <div key={i} className="expectation-item">
+                        <div className="expectation-num" style={{ background: sev.bg || sev.color + '22', color: sev.color }}>{i + 1}</div>
+                        <div className="expectation-text">{exp}</div>
+                    </div>
+                ))}
+            </div>
+
+            {data.events_this_week[0]?.customer_notes && (
+                <div className="card-body">
+                    <div className="section-title">Specific to This Delivery</div>
+                    <p style={{ fontSize: '0.9rem', lineHeight: 1.5, color: 'var(--text-secondary)', marginBottom: 10 }}>
+                        The customer at <strong style={{ color: 'var(--text-primary)' }}>{data.events_this_week[0].address}</strong> provided these instructions:
+                    </p>
+                    <div className="event-quote" style={{ fontSize: '0.9rem' }}>
+                        "{data.events_this_week[0].customer_notes}"
+                    </div>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: 12 }}>
+                        These instructions must be followed exactly as written on every delivery.
+                    </p>
+                </div>
+            )}
+
+            <div className="card-body" style={{ background: 'rgba(255,255,255,0.02)' }}>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+                    Reference: Amazon Standard Work Practice — Customer Delivery Instructions Compliance
+                </p>
+            </div>
+        </div>
+    );
+}
+
+function Card4_WhyItMatters({ data }) {
+    const sev = data.severity;
+    const customerQuote = data.events_this_week[0]?.feedback_detail || "Negative delivery experience";
+
+    return (
+        <div className="card active">
+            <div className="card-header" style={{ background: sev.color }}>
+                <div className="card-number">Card 4 of 6</div>
+                <div className="card-title">Why It Matters</div>
+            </div>
+
+            <div className="card-body">
+                <div className="impact-section">
+                    <div className="impact-title">
+                        <span style={{ fontSize: '1.1rem' }}>📊</span> For You and Your Team
+                    </div>
+                    <div className="impact-item">
+                        <span className="impact-arrow">▸</span>
+                        <span><strong>YOUR scorecard rating</strong> — CDF is weighted heavily in Amazon's Delivery Excellence Score</span>
+                    </div>
+                    <div className="impact-item">
+                        <span className="impact-arrow">▸</span>
+                        <span><strong>SPRC's overall standing</strong> — our DSP scorecard determines route allocation, incentives, and contract standing</span>
+                    </div>
+                    <div className="impact-item">
+                        <span className="impact-arrow">▸</span>
+                        <span><strong>Route availability</strong> — poor CDF scores can lead to reduced routes, which means fewer shifts for the entire team</span>
+                    </div>
+                    <div className="impact-item">
+                        <span className="impact-arrow">▸</span>
+                        <span><strong>DSP survival</strong> — sustained poor performance puts the entire DSP contract at risk, affecting all {data.fleet_size}+ drivers</span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="card-body">
+                <div className="impact-section" style={{ marginBottom: 0 }}>
+                    <div className="impact-title">
+                        <span style={{ fontSize: '1.1rem' }}>👤</span> For the Customer
+                    </div>
+                    <p style={{ fontSize: '0.9rem', lineHeight: 1.6, color: 'var(--text-secondary)', marginBottom: 14 }}>
+                        Customers trust us with their deliveries. When we don't follow their instructions, deliver to the wrong place, or mishandle their packages — we break that trust.
+                    </p>
+                    <p style={{ fontSize: '0.9rem', lineHeight: 1.6, color: 'var(--text-secondary)', marginBottom: 14 }}>
+                        Every negative feedback represents a real person who had a bad experience.
+                    </p>
+                    <div className="event-quote">
+                        "{customerQuote}" — that's what the customer said about this delivery.
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function Card5_Consequences({ data }) {
+    const sev = data.severity;
+    const currentLevel = sev.level;
+
+    const levels = [
+        { level: 1, label: "1st Coaching", range: "1-3 events", color: "#06B6D4" },
+        { level: 2, label: "2nd Coaching", range: "4-7 events", color: "#D97706" },
+        { level: 3, label: "Warning", range: "8-11 events", color: "#EA580C" },
+        { level: 4, label: "Final Warning", range: "12-14 events", color: "#DC2626" },
+        { level: 5, label: "Termination Review", range: "15+ events", color: "#111827" }
+    ];
+
+    const nextMessages = {
+        1: "If you receive additional negative CDF events, your next coaching will escalate to 2nd Coaching. Focus on the expectations on Card 3 to prevent further events.",
+        2: "Continued CDF events will escalate to a formal Warning, which may result in reduced scheduled days.",
+        3: "You are approaching the threshold for Final Warning. Continued events may result in suspension from routes.",
+        4: "You are 1-3 events away from the 15-event threshold. Reaching 15 events in 90 days will initiate termination review. This is your final opportunity to demonstrate sustained improvement."
+    };
+
+    return (
+        <div className="card active">
+            <div className="card-header" style={{ background: sev.color }}>
+                <div className="card-number">Card 5 of 6</div>
+                <div className="card-title">Consequences</div>
+            </div>
+
+            <div className="card-body">
+                <div className="section-title">You Are Currently At</div>
+                <div style={{ textAlign: 'center', padding: '12px 0 20px' }}>
+                    <span style={{
+                        display: 'inline-block', padding: '8px 20px', borderRadius: 8,
+                        background: sev.color, fontWeight: 700, fontSize: '1.1rem'
+                    }}>
+                        {sev.label}
+                    </span>
+                    <div style={{ marginTop: 8, color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                        {data.counts.events_90_day} events in the last 90 days
+                    </div>
+                    <div style={{ marginTop: 4, color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                        {data.counts.remaining_before_next} more event{data.counts.remaining_before_next !== 1 ? 's' : ''} before next escalation
+                    </div>
+                </div>
+
+                <div className="section-title" style={{ marginTop: 8 }}>Escalation Path</div>
+                <div className="escalation-path">
+                    {levels.map((lvl) => {
+                        const status = lvl.level < currentLevel ? 'completed' :
+                                       lvl.level === currentLevel ? 'current' : 'future';
+                        return (
+                            <div key={lvl.level} className="escalation-step">
+                                <div className={`escalation-dot ${status}`} style={
+                                    status === 'current' ? { borderColor: lvl.color, color: lvl.color } :
+                                    status === 'completed' ? {} : {}
+                                }>
+                                    {status === 'completed' ? '✓' : lvl.level}
+                                </div>
+                                <div className="escalation-info">
+                                    <div className="escalation-label" style={status === 'current' ? { color: lvl.color } : status === 'future' ? { opacity: 0.4 } : {}}>
+                                        {lvl.label}
+                                        {status === 'current' && (
+                                            <span className="escalation-current-badge" style={{ background: lvl.color, color: 'white', marginLeft: 8 }}>
+                                                You are here
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="escalation-range">{lvl.range}</div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+
+            <div className="card-body">
+                <div className="section-title">What Happens Next</div>
+                <p style={{ fontSize: '0.9rem', lineHeight: 1.6, color: 'var(--text-secondary)' }}>
+                    {nextMessages[currentLevel]}
+                </p>
+            </div>
+        </div>
+    );
+}
+
+function Card6_OccurrenceSupport({ data }) {
+    const sev = data.severity;
+    const trendClass = data.trend === 'DECLINING' ? 'trend-up' : data.trend === 'IMPROVING' ? 'trend-down' : 'trend-stable';
+    const trendEmoji = data.trend === 'DECLINING' ? '📉' : data.trend === 'IMPROVING' ? '📈' : '➡️';
+    const trendMsg = data.trend === 'DECLINING'
+        ? "Your trend is declining — this needs immediate attention."
+        : data.trend === 'IMPROVING'
+        ? "Your trend is improving — you had fewer events this week than last. Keep it up."
+        : "Your trend is stable — maintain focus on the expectations above.";
+
+    const supportMsg = sev.level <= 2
+        ? "This coaching is about improvement, not punishment. We want you to succeed. If you need support — whether it's route questions, delivery challenges, or anything affecting your performance — reach out to your manager. We'll work through it together."
+        : sev.level === 3
+        ? "We take your success seriously. This warning exists because we want to give you every opportunity to improve before consequences escalate. Talk to your manager about any barriers you're facing. We want to help you turn this around."
+        : "This is a critical moment. We are committed to giving you a fair chance to demonstrate improvement. Please schedule time with your manager this week to create an action plan. We believe improvement is possible.";
+
+    return (
+        <div className="card active">
+            <div className="card-header" style={{ background: sev.color }}>
+                <div className="card-number">Card 6 of 6</div>
+                <div className="card-title">Occurrence & Support</div>
+            </div>
+
+            <div className="card-body">
+                <div className="section-title">Your Coaching Record</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 14 }}>
+                    90-Day Window: {data.counts.window_start} to {data.counts.window_end}
+                </div>
+                <div className="stat-grid">
+                    <div className="stat-box">
+                        <div className="stat-number" style={{ color: sev.color }}>{data.counts.events_90_day}</div>
+                        <div className="stat-label">CDF Events</div>
+                    </div>
+                    <div className="stat-box">
+                        <div className="stat-number">{data.counts.coaching_sessions}</div>
+                        <div className="stat-label">Coaching Sessions</div>
+                    </div>
+                    <div className="stat-box">
+                        <div className="stat-number">{data.counts.events_this_week}</div>
+                        <div className="stat-label">This Week</div>
+                    </div>
+                    <div className="stat-box">
+                        <div className="stat-number">{data.counts.oldest_event_expires_days}d</div>
+                        <div className="stat-label">Oldest Expires In</div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="card-body">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                    <span style={{ fontSize: '1.2rem' }}>{trendEmoji}</span>
+                    <span className={`trend-indicator ${trendClass}`}>{data.trend}</span>
+                </div>
+                <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                    {trendMsg}
+                </p>
+            </div>
+
+            <div className="support-msg">
+                <div style={{ fontWeight: 600, marginBottom: 8, color: 'var(--text-primary)' }}>
+                    We're Here to Help
+                </div>
+                {supportMsg}
+            </div>
+        </div>
+    );
+}
+
+// ==============================
+// ACKNOWLEDGMENT
+// ==============================
+
+function AcknowledgmentScreen({ data, onAcknowledge }) {
+    const [checks, setChecks] = useState([false, false, false]);
+    const allChecked = checks.every(Boolean);
+    const sev = data.severity;
+
+    const toggle = (i) => {
+        const next = [...checks];
+        next[i] = !next[i];
+        setChecks(next);
+    };
+
+    const labels = [
+        "I understand the issue described in this coaching",
+        "I understand the expectations and what I need to do differently",
+        "I understand the consequences if improvement is not shown"
+    ];
+
+    return (
+        <div className="ack-screen active">
+            <div className="card-header" style={{ background: sev.color }}>
+                <div className="card-number">Acknowledgment Required</div>
+                <div className="card-title">Confirm Understanding</div>
+            </div>
+
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.5, margin: '16px 0' }}>
+                Please confirm that you have read and understood each section of this coaching session.
+            </p>
+
+            {labels.map((label, i) => (
+                <div key={i} className={`checkbox-item ${checks[i] ? 'checked' : ''}`} onClick={() => toggle(i)}>
+                    <div className="custom-checkbox">
+                        <span className="checkmark">✓</span>
+                    </div>
+                    <div className="checkbox-text">{label}</div>
+                </div>
+            ))}
+
+            <button
+                className="ack-button"
+                style={{ background: allChecked ? sev.color : undefined }}
+                disabled={!allChecked}
+                onClick={onAcknowledge}
+            >
+                Acknowledge & Continue
+            </button>
+        </div>
+    );
+}
+
+// ==============================
+// COMPLETION
+// ==============================
+
+function CompletionScreen({ data }) {
+    return (
+        <div className="completion-screen active">
+            <div className="completion-icon">✅</div>
+            <div className="completion-title">Coaching Completed</div>
+            <div className="completion-sub">
+                Thank you. This coaching has been documented.
+                A copy has been sent to you and your manager.
+            </div>
+            <div className="completion-session">
+                Session ID: {data.session_id}<br />
+                Completed: {new Date().toLocaleString()}
+            </div>
+        </div>
+    );
+}
+
+// ==============================
+// MAIN APP
+// ==============================
+
+function App() {
+    const [loading, setLoading] = useState(true);
+    const [loadProgress, setLoadProgress] = useState(0);
+    const [currentCard, setCurrentCard] = useState(0);
+    const [phase, setPhase] = useState('cards'); // cards | ack | done
+    const [cardStartTimes, setCardStartTimes] = useState([]);
+    const data = COACHING_DATA;
+    const totalCards = 6;
+
+    useEffect(() => {
+        const t1 = setTimeout(() => setLoadProgress(40), 200);
+        const t2 = setTimeout(() => setLoadProgress(80), 600);
+        const t3 = setTimeout(() => setLoadProgress(100), 900);
+        const t4 = setTimeout(() => setLoading(false), 1300);
+        return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); };
+    }, []);
+
+    useEffect(() => {
+        setCardStartTimes(prev => {
+            const next = [...prev];
+            next[currentCard] = Date.now();
+            return next;
+        });
+    }, [currentCard]);
+
+    const goNext = () => {
+        if (currentCard < totalCards - 1) setCurrentCard(c => c + 1);
+        else setPhase('ack');
+    };
+    const goPrev = () => { if (currentCard > 0) setCurrentCard(c => c - 1); };
+
+    const handleAcknowledge = () => {
+        setPhase('done');
+        // In production: POST to Google Sheets API + send Slack notification
+        console.log("Coaching acknowledged:", {
+            session_id: data.session_id,
+            driver: data.driver.name,
+            timestamp: new Date().toISOString()
+        });
+    };
+
+    const cards = [
+        <Card1_CoachingType data={data} />,
+        <Card2_WhatHappened data={data} />,
+        <Card3_Expectations data={data} />,
+        <Card4_WhyItMatters data={data} />,
+        <Card5_Consequences data={data} />,
+        <Card6_OccurrenceSupport data={data} />
+    ];
+
+    const progressPct = phase === 'done' ? 100 :
+                        phase === 'ack' ? 95 :
+                        ((currentCard + 1) / totalCards) * 90;
+
+    return (
+        <>
+            {/* Loading Screen */}
+            <div className={`loading-screen ${!loading ? 'hidden' : ''}`}>
+                <div className="loading-logo" style={{ color: data.severity.color }}>SPRC</div>
+                <div className="loading-sub">Driver Coaching System</div>
+                <div className="loading-bar">
+                    <div className="loading-bar-fill" style={{ width: `${loadProgress}%`, background: data.severity.color }}></div>
+                </div>
+            </div>
+
+            {/* Main App */}
+            {!loading && (
+                <div className="app">
+                    {/* Top Bar */}
+                    <div className="top-bar">
+                        <div className="top-bar-left">
+                            <div className="severity-dot" style={{ background: data.severity.color }}></div>
+                            <div className="session-label">{data.severity.label}</div>
+                        </div>
+                        {phase === 'cards' && (
+                            <div className="card-counter">{currentCard + 1} / {totalCards}</div>
+                        )}
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div className="progress-bar">
+                        <div className="progress-fill" style={{ width: `${progressPct}%`, background: data.severity.color }}></div>
+                    </div>
+
+                    {/* Card Area */}
+                    <div className="card-area">
+                        {phase === 'cards' && cards[currentCard]}
+                        {phase === 'ack' && <AcknowledgmentScreen data={data} onAcknowledge={handleAcknowledge} />}
+                        {phase === 'done' && <CompletionScreen data={data} />}
+                    </div>
+
+                    {/* Dots */}
+                    {phase === 'cards' && (
+                        <div className="dots">
+                            {Array.from({ length: totalCards }).map((_, i) => (
+                                <div key={i} className={`dot ${i === currentCard ? 'active' : ''} ${i < currentCard ? 'completed' : ''}`}
+                                     style={i === currentCard ? { background: data.severity.color } : {}} />
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Bottom Nav */}
+                    {phase === 'cards' && (
+                        <div className="bottom-nav">
+                            <button className="nav-btn prev" onClick={goPrev} disabled={currentCard === 0}>
+                                ← Back
+                            </button>
+                            <button className="nav-btn next" onClick={goNext} style={{ background: data.severity.color }}>
+                                {currentCard === totalCards - 1 ? 'Review & Acknowledge' : 'Next →'}
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
+        </>
+    );
+}
+
+ReactDOM.render(<App />, document.getElementById('app-root'));
+</script>
+</body>
+</html>
