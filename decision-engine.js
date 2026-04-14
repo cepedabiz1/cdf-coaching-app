@@ -551,7 +551,8 @@ function generateCoachingSession(driverProfile, events, weekLabel) {
             feedback_detail: e.feedback_detail || e.feedback_category,
             customer_notes: e.customer_notes || 'None',
             safe_delivery_location: e.safe_delivery_location || 'Not specified',
-            geopin_distance: e.geopin_distance
+            geopin_distance: e.geopin_distance,
+            pod_image_url: e.pod_image_url || null
         })),
         counts: {
             events_this_week: events.length,
