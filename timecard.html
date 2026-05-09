@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Timecard Audit — SPRC DNJ4</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root {
+    --severity-turquoise:#06B6D4;
+    --severity-yellow:#D97706;
+    --severity-orange:#EA580C;
+    --severity-red:#DC2626;
+    --bg-dark:#0F172A;
+    --bg-card:#1E293B;
+    --text-primary:#F8FAFC;
+    --text-secondary:#94A3B8;
+    --text-muted:#64748B;
+    --border:#334155;
+    --success:#10B981;
+    --accent:#3B82F6;
+  }
+  body {
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    background:var(--bg-dark); color:var(--text-primary);
+    min-height:100vh; -webkit-font-smoothing:antialiased;
+  }
+  .top-bar {
+    padding:14px 20px; display:flex; align-items:center; justify-content:space-between;
+    background:rgba(15,23,42,0.95); border-bottom:1px solid var(--border);
+    position:sticky; top:0; z-index:10; backdrop-filter:blur(10px);
+  }
+  .top-bar h1 { font-size:1.05rem; font-weight:700; letter-spacing:-0.01em; }
+  .top-bar .sub { font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.08em; }
+  .top-bar a { color:var(--text-secondary); text-decoration:none; font-size:0.8rem; }
+  .top-bar a:hover { color:var(--text-primary); }
+
+  .container { max-width:1200px; margin:0 auto; padding:20px 20px 80px; }
+
+  .panel {
+    background:var(--bg-card); border:1px solid var(--border);
+    border-radius:12px; padding:20px; margin-bottom:20px;
+  }
+  .panel h2 {
+    font-size:0.78rem; text-transform:uppercase; letter-spacing:0.1em;
+    color:var(--text-muted); margin-bottom:14px; font-weight:700;
+  }
+
+  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:720px){ .grid-2 { grid-template-columns:1fr; } }
+
+  .drop-zone {
+    border:2px dashed var(--border); border-radius:10px;
+    padding:24px 16px; text-align:center; cursor:pointer;
+    transition:all 0.2s ease; background:rgba(255,255,255,0.02);
+  }
+  .drop-zone:hover, .drop-zone.dragover {
+    border-color:var(--accent); background:rgba(59,130,246,0.06);
+  }
+  .drop-zone.has-file { border-color:var(--success); border-style:solid; background:rgba(16,185,129,0.05); }
+  .drop-zone .label { font-size:0.85rem; color:var(--text-secondary); font-weight:600; margin-bottom:4px; }
+  .drop-zone .hint { font-size:0.72rem; color:var(--text-muted); }
+  .drop-zone .filename { font-size:0.8rem; color:var(--success); font-weight:600; margin-top:6px; word-break:break-all; }
+  .drop-zone input[type=file] { display:none; }
+
+  .controls { display:flex; flex-wrap:wrap; gap:14px; align-items:end; }
+  .field { display:flex; flex-direction:column; gap:6px; }
+  .field label { font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em; font-weight:600; }
+  .field input[type=number], .field input[type=text], .field select {
+    background:var(--bg-dark); color:var(--text-primary);
+    border:1px solid var(--border); border-radius:8px;
+    padding:9px 12px; font-size:0.9rem; min-width:120px;
+  }
+  .field input:focus, .field select:focus { outline:none; border-color:var(--accent); }
+
+  .btn {
+    background:var(--accent); color:#fff; border:none;
+    padding:11px 22px; border-radius:8px; font-size:0.9rem; font-weight:600;
+    cursor:pointer; transition:all 0.15s ease;
+  }
+  .btn:hover { filter:brightness(1.1); }
+  .btn:disabled { opacity:0.5; cursor:not-allowed; }
+  .btn.secondary { background:transparent; border:1px solid var(--border); color:var(--text-secondary); }
+  .btn.secondary:hover { border-color:var(--text-secondary); color:var(--text-primary); }
+
+  .summary { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+  @media (max-width:720px){ .summary { grid-template-columns:repeat(2,1fr); } }
+  .stat {
+    background:var(--bg-card); border:1px solid var(--border); border-radius:10px;
+    padding:14px;
+  }
+  .stat .num { font-size:1.6rem; font-weight:800; }
+  .stat .lbl { font-size:0.72rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em; margin-top:2px; }
+  .stat.flagged .num { color:var(--severity-red); }
+  .stat.warn .num { color:var(--severity-orange); }
+  .stat.clean .num { color:var(--success); }
+
+  table.audit {
+    width:100%; border-collapse:collapse; font-size:0.85rem;
+  }
+  table.audit th {
+    text-align:left; padding:10px 12px; font-size:0.7rem;
+    color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em;
+    border-bottom:1px solid var(--border); font-weight:700;
+    background:rgba(255,255,255,0.02); position:sticky; top:0;
+  }
+  table.audit td {
+    padding:10px 12px; border-bottom:1px solid var(--border);
+    color:var(--text-secondary); vertical-align:top;
+  }
+  table.audit tr:hover td { background:rgba(255,255,255,0.02); color:var(--text-primary); }
+  table.audit .name { color:var(--text-primary); font-weight:600; }
+  table.audit .mono { font-family:'SF Mono',Menlo,Consolas,monospace; font-size:0.8rem; }
+
+  .badge {
+    display:inline-block; padding:3px 8px; border-radius:6px;
+    font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;
+  }
+  .badge.clean { background:rgba(16,185,129,0.15); color:#6EE7B7; }
+  .badge.warn { background:rgba(217,119,6,0.18); color:#FCD34D; }
+  .badge.flag { background:rgba(220,38,38,0.18); color:#FCA5A5; }
+
+  .findings { margin:0; padding-left:16px; }
+  .findings li { margin-bottom:3px; font-size:0.8rem; }
+  .findings li.f-flag { color:#FCA5A5; }
+  .findings li.f-warn { color:#FCD34D; }
+
+  .table-wrap { overflow-x:auto; max-height:600px; overflow-y:auto; }
+
+  .empty {
+    text-align:center; padding:48px 20px; color:var(--text-muted);
+    font-size:0.9rem;
+  }
+
+  details.help { margin-top:14px; }
+  details.help summary {
+    cursor:pointer; font-size:0.78rem; color:var(--text-secondary);
+    padding:8px 0; user-select:none;
+  }
+  details.help summary:hover { color:var(--text-primary); }
+  details.help pre {
+    background:var(--bg-dark); border:1px solid var(--border); border-radius:6px;
+    padding:10px 12px; font-size:0.75rem; color:var(--text-secondary);
+    overflow-x:auto; margin-top:8px;
+  }
+
+  .filter-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+  .filter-pill {
+    padding:6px 12px; border-radius:20px; border:1px solid var(--border);
+    background:transparent; color:var(--text-secondary); font-size:0.78rem;
+    cursor:pointer; font-weight:600;
+  }
+  .filter-pill.active { border-color:var(--accent); color:var(--text-primary); background:rgba(59,130,246,0.12); }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div>
+    <div class="sub">SPRC DNJ4 · Audit</div>
+    <h1>Timecard Audit</h1>
+  </div>
+  <a href="index.html">&larr; Coaching</a>
+</div>
+
+<div class="container">
+
+  <div class="panel">
+    <h2>1 · Upload Data</h2>
+    <div class="grid-2">
+      <label class="drop-zone" id="dz-tc">
+        <div class="label">Timecard CSV</div>
+        <div class="hint">Click or drag to upload payroll export</div>
+        <div class="filename" id="fn-tc"></div>
+        <input type="file" id="file-tc" accept=".csv,text/csv">
+      </label>
+      <label class="drop-zone" id="dz-it">
+        <div class="label">Itinerary CSV</div>
+        <div class="hint">Click or drag to upload route itinerary</div>
+        <div class="filename" id="fn-it"></div>
+        <input type="file" id="file-it" accept=".csv,text/csv">
+      </label>
+    </div>
+
+    <details class="help">
+      <summary>Expected CSV columns</summary>
+      <pre>Timecard CSV columns (case-insensitive, flexible names):
+  employee | name        — driver name or ID
+  date                   — YYYY-MM-DD or MM/DD/YYYY
+  scheduled_start | sched_in   — HH:MM (optional but recommended)
+  scheduled_end   | sched_out
+  clock_in   | actual_in | punch_in
+  clock_out  | actual_out| punch_out
+  edited     — Y/N or true/false (optional)
+  edit_reason — free text (optional)
+
+Itinerary CSV columns:
+  employee | name
+  date
+  route_start | depart      — when driver left station
+  first_stop  | first_delivery
+  last_stop   | last_delivery
+  rts | return | route_end  — return-to-station time</pre>
+    </details>
+  </div>
+
+  <div class="panel">
+    <h2>2 · Audit Settings</h2>
+    <div class="controls">
+      <div class="field">
+        <label for="tol">Tolerance (minutes)</label>
+        <input type="number" id="tol" value="15" min="0" max="120">
+      </div>
+      <div class="field">
+        <label for="ot">OT Threshold (hrs/day)</label>
+        <input type="number" id="ot" value="10" min="4" max="16" step="0.5">
+      </div>
+      <div class="field" style="flex:1; min-width:200px;">
+        <label>&nbsp;</label>
+        <button class="btn" id="run">Run Audit</button>
+      </div>
+      <div class="field">
+        <label>&nbsp;</label>
+        <button class="btn secondary" id="export" disabled>Export CSV</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="results-wrap" style="display:none;">
+    <div class="summary">
+      <div class="stat"><div class="num" id="s-total">0</div><div class="lbl">Shifts Audited</div></div>
+      <div class="stat clean"><div class="num" id="s-clean">0</div><div class="lbl">Clean</div></div>
+      <div class="stat warn"><div class="num" id="s-warn">0</div><div class="lbl">Warnings</div></div>
+      <div class="stat flagged"><div class="num" id="s-flag">0</div><div class="lbl">Flagged</div></div>
+    </div>
+
+    <div class="panel">
+      <h2>3 · Findings</h2>
+      <div class="filter-row">
+        <button class="filter-pill active" data-filter="all">All</button>
+        <button class="filter-pill" data-filter="flag">Flagged</button>
+        <button class="filter-pill" data-filter="warn">Warnings</button>
+        <button class="filter-pill" data-filter="clean">Clean</button>
+      </div>
+      <div class="table-wrap">
+        <table class="audit">
+          <thead>
+            <tr>
+              <th>Status</th>
+              <th>Employee</th>
+              <th>Date</th>
+              <th>Scheduled</th>
+              <th>Punched</th>
+              <th>Itinerary</th>
+              <th>Hours</th>
+              <th>Findings</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="empty" id="empty-state">
+    Upload a timecard CSV and click Run Audit to begin.
+  </div>
+
+</div>
+
+<script>
+const state = {
+  timecardRows: [],
+  itineraryRows: [],
+  results: [],
+  filter: 'all',
+};
+
+// --- File handling ---
+function bindDropZone(zoneId, inputId, fnId, target) {
+  const zone = document.getElementById(zoneId);
+  const input = document.getElementById(inputId);
+  const fn = document.getElementById(fnId);
+
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('dragover');
+    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+  });
+  input.addEventListener('change', e => {
+    if (e.target.files.length) handleFile(e.target.files[0]);
+  });
+
+  function handleFile(file) {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const rows = parseCSV(ev.target.result);
+      state[target] = rows;
+      fn.textContent = `${file.name} · ${rows.length} rows`;
+      zone.classList.add('has-file');
+    };
+    reader.readAsText(file);
+  }
+}
+bindDropZone('dz-tc', 'file-tc', 'fn-tc', 'timecardRows');
+bindDropZone('dz-it', 'file-it', 'fn-it', 'itineraryRows');
+
+// --- CSV parser (handles quoted fields) ---
+function parseCSV(text) {
+  const lines = [];
+  let cur = '', row = [], inQuote = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i], n = text[i+1];
+    if (inQuote) {
+      if (c === '"' && n === '"') { cur += '"'; i++; }
+      else if (c === '"') inQuote = false;
+      else cur += c;
+    } else {
+      if (c === '"') inQuote = true;
+      else if (c === ',') { row.push(cur); cur = ''; }
+      else if (c === '\n' || c === '\r') {
+        if (c === '\r' && n === '\n') i++;
+        row.push(cur); lines.push(row); row = []; cur = '';
+      } else cur += c;
+    }
+  }
+  if (cur.length || row.length) { row.push(cur); lines.push(row); }
+  if (!lines.length) return [];
+  const header = lines.shift().map(h => normalizeKey(h));
+  return lines
+    .filter(r => r.some(c => c && c.trim().length))
+    .map(r => {
+      const obj = {};
+      header.forEach((h, i) => obj[h] = (r[i] || '').trim());
+      return obj;
+    });
+}
+
+function normalizeKey(k) {
+  return (k || '').toLowerCase().trim().replace(/[\s\-]+/g, '_').replace(/[^a-z0-9_]/g, '');
+}
+
+// --- Field aliases ---
+const ALIASES = {
+  employee:    ['employee', 'name', 'driver', 'driver_name', 'transporter_id', 'employee_id', 'emp_id'],
+  date:        ['date', 'shift_date', 'work_date'],
+  sched_start: ['scheduled_start', 'sched_start', 'sched_in', 'shift_start', 'scheduled_in', 'schedule_start'],
+  sched_end:   ['scheduled_end', 'sched_end', 'sched_out', 'shift_end', 'scheduled_out', 'schedule_end'],
+  clock_in:    ['clock_in', 'actual_in', 'punch_in', 'in', 'time_in', 'start'],
+  clock_out:   ['clock_out', 'actual_out', 'punch_out', 'out', 'time_out', 'end'],
+  edited:      ['edited', 'is_edited', 'edit', 'manually_edited'],
+  edit_reason: ['edit_reason', 'edit_note', 'reason', 'notes'],
+  route_start: ['route_start', 'depart', 'depart_time', 'station_depart', 'dispatch'],
+  first_stop:  ['first_stop', 'first_delivery', 'first_scan'],
+  last_stop:   ['last_stop', 'last_delivery', 'last_scan'],
+  rts:         ['rts', 'return', 'route_end', 'station_return', 'return_time'],
+};
+
+function pick(row, key) {
+  for (const alias of ALIASES[key] || [key]) {
+    if (row[alias] !== undefined && row[alias] !== '') return row[alias];
+  }
+  return '';
+}
+
+// --- Time / date helpers ---
+function parseTime(str, dateStr) {
+  if (!str) return null;
+  str = String(str).trim();
+  // Already has date
+  let d = new Date(str);
+  if (!isNaN(d)) return d;
+
+  // Just a time like "8:00", "08:00 AM", "13:45"
+  const tm = str.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(am|pm)?$/i);
+  if (tm && dateStr) {
+    let h = parseInt(tm[1], 10);
+    const m = parseInt(tm[2], 10);
+    const s = tm[3] ? parseInt(tm[3], 10) : 0;
+    const ap = (tm[4] || '').toLowerCase();
+    if (ap === 'pm' && h < 12) h += 12;
+    if (ap === 'am' && h === 12) h = 0;
+    const base = parseDate(dateStr);
+    if (!base) return null;
+    base.setHours(h, m, s, 0);
+    return base;
+  }
+  return null;
+}
+
+function parseDate(str) {
+  if (!str) return null;
+  str = String(str).trim();
+  // ISO YYYY-MM-DD
+  let m = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return new Date(+m[1], +m[2]-1, +m[3]);
+  // US MM/DD/YYYY
+  m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  if (m) {
+    let y = +m[3]; if (y < 100) y += 2000;
+    return new Date(y, +m[1]-1, +m[2]);
+  }
+  const d = new Date(str);
+  return isNaN(d) ? null : d;
+}
+
+function fmtTime(d) {
+  if (!d) return '—';
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+function diffMin(a, b) {
+  if (!a || !b) return null;
+  return Math.round((a - b) / 60000);
+}
+function isTruthy(v) {
+  if (v === undefined || v === null) return false;
+  const s = String(v).toLowerCase().trim();
+  return s === 'y' || s === 'yes' || s === 'true' || s === '1';
+}
+
+// --- Audit engine ---
+function runAudit() {
+  if (!state.timecardRows.length) {
+    alert('Please upload a timecard CSV first.');
+    return;
+  }
+  const tol = parseInt(document.getElementById('tol').value, 10) || 15;
+  const otHrs = parseFloat(document.getElementById('ot').value) || 10;
+
+  // Index itinerary by employee+date
+  const itinIdx = {};
+  for (const it of state.itineraryRows) {
+    const key = (pick(it, 'employee') + '|' + (parseDate(pick(it, 'date'))?.toDateString() || ''));
+    itinIdx[key] = it;
+  }
+
+  state.results = state.timecardRows.map(row => audit(row, itinIdx, tol, otHrs));
+  renderResults();
+}
+
+function audit(row, itinIdx, tol, otHrs) {
+  const employee = pick(row, 'employee');
+  const dateStr = pick(row, 'date');
+  const dateObj = parseDate(dateStr);
+  const dateKey = dateObj ? dateObj.toDateString() : '';
+
+  const schedIn  = parseTime(pick(row, 'sched_start'), dateStr);
+  const schedOut = parseTime(pick(row, 'sched_end'),   dateStr);
+  const clockIn  = parseTime(pick(row, 'clock_in'),    dateStr);
+  const clockOut = parseTime(pick(row, 'clock_out'),   dateStr);
+  const edited   = isTruthy(pick(row, 'edited'));
+  const editReason = pick(row, 'edit_reason');
+
+  const itin = itinIdx[employee + '|' + dateKey];
+  const itDepart = itin ? parseTime(pick(itin, 'route_start'), dateStr) : null;
+  const itFirst  = itin ? parseTime(pick(itin, 'first_stop'),  dateStr) : null;
+  const itLast   = itin ? parseTime(pick(itin, 'last_stop'),   dateStr) : null;
+  const itRTS    = itin ? parseTime(pick(itin, 'rts'),         dateStr) : null;
+
+  const findings = [];
+
+  // 1. Missed punches
+  if (!clockIn)  findings.push({ sev: 'flag', msg: 'Missing clock-in punch' });
+  if (!clockOut) findings.push({ sev: 'flag', msg: 'Missing clock-out punch' });
+
+  // 2. Schedule vs actual variance
+  if (schedIn && clockIn) {
+    const d = diffMin(clockIn, schedIn);
+    if (Math.abs(d) > tol) {
+      findings.push({
+        sev: Math.abs(d) > tol * 2 ? 'flag' : 'warn',
+        msg: `Clock-in ${d > 0 ? d + ' min late' : Math.abs(d) + ' min early'} vs schedule`,
+      });
+    }
+  }
+  if (schedOut && clockOut) {
+    const d = diffMin(clockOut, schedOut);
+    if (Math.abs(d) > tol) {
+      findings.push({
+        sev: Math.abs(d) > tol * 2 ? 'flag' : 'warn',
+        msg: `Clock-out ${d > 0 ? d + ' min after' : Math.abs(d) + ' min before'} schedule`,
+      });
+    }
+  }
+
+  // 3. Time edits accuracy vs itinerary
+  if (edited) {
+    if (!itin) {
+      findings.push({ sev: 'warn', msg: `Time edited${editReason ? ' ('+editReason+')' : ''} — no itinerary to verify` });
+    } else {
+      // Compare clock-in to route-start (driver should clock in before/at depart)
+      if (clockIn && itDepart) {
+        const d = diffMin(itDepart, clockIn); // depart - clockIn (positive = clocked in before depart)
+        if (d < -tol) {
+          findings.push({ sev: 'flag', msg: `Edited clock-in is ${Math.abs(d)} min AFTER route depart (${fmtTime(itDepart)})` });
+        } else if (Math.abs(d) > tol * 4) {
+          findings.push({ sev: 'warn', msg: `Edited clock-in ${Math.abs(d)} min from route depart` });
+        }
+      }
+      // Compare clock-out to RTS or last stop
+      const refOut = itRTS || itLast;
+      const refLabel = itRTS ? 'RTS' : 'last stop';
+      if (clockOut && refOut) {
+        const d = diffMin(clockOut, refOut); // clockOut - RTS (positive = after RTS)
+        if (d < -tol) {
+          findings.push({ sev: 'flag', msg: `Edited clock-out is ${Math.abs(d)} min BEFORE ${refLabel} (${fmtTime(refOut)})` });
+        } else if (Math.abs(d) > tol * 4) {
+          findings.push({ sev: 'warn', msg: `Edited clock-out ${d > 0 ? d + ' min after' : Math.abs(d) + ' min before'} ${refLabel}` });
+        }
+      }
+      if (!findings.some(f => /Edited/.test(f.msg))) {
+        findings.push({ sev: 'warn', msg: `Time edited${editReason ? ' ('+editReason+')' : ''} — within tolerance vs itinerary` });
+      }
+    }
+  } else if (itin) {
+    // Even without edit flag, sanity-check actual punches vs itinerary
+    if (clockIn && itDepart && diffMin(itDepart, clockIn) < -tol) {
+      const d = diffMin(itDepart, clockIn);
+      findings.push({ sev: 'warn', msg: `Clock-in ${Math.abs(d)} min after route depart per itinerary` });
+    }
+    if (clockOut && (itRTS || itLast)) {
+      const ref = itRTS || itLast;
+      const d = diffMin(clockOut, ref);
+      if (d < -tol) {
+        findings.push({ sev: 'warn', msg: `Clock-out ${Math.abs(d)} min before ${itRTS ? 'RTS' : 'last stop'} per itinerary` });
+      }
+    }
+  }
+
+  // 4. Hours / OT
+  let hours = null;
+  if (clockIn && clockOut) {
+    hours = (clockOut - clockIn) / 3600000;
+    if (hours < 0) {
+      findings.push({ sev: 'flag', msg: 'Clock-out before clock-in (data error)' });
+      hours = null;
+    } else if (hours > otHrs) {
+      findings.push({ sev: 'warn', msg: `Long shift: ${hours.toFixed(2)} hrs (over ${otHrs}h threshold)` });
+    } else if (hours < 1) {
+      findings.push({ sev: 'warn', msg: `Very short shift: ${hours.toFixed(2)} hrs` });
+    }
+  }
+
+  let status = 'clean';
+  if (findings.some(f => f.sev === 'flag')) status = 'flag';
+  else if (findings.some(f => f.sev === 'warn')) status = 'warn';
+
+  return {
+    employee, date: dateStr, dateObj,
+    schedIn, schedOut, clockIn, clockOut,
+    itDepart, itFirst, itLast, itRTS,
+    hours, edited, findings, status,
+  };
+}
+
+// --- Render ---
+function renderResults() {
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('results-wrap').style.display = 'block';
+  document.getElementById('export').disabled = false;
+
+  const total = state.results.length;
+  const flag = state.results.filter(r => r.status === 'flag').length;
+  const warn = state.results.filter(r => r.status === 'warn').length;
+  const clean = state.results.filter(r => r.status === 'clean').length;
+
+  document.getElementById('s-total').textContent = total;
+  document.getElementById('s-flag').textContent = flag;
+  document.getElementById('s-warn').textContent = warn;
+  document.getElementById('s-clean').textContent = clean;
+
+  const tbody = document.getElementById('rows');
+  const filtered = state.filter === 'all'
+    ? state.results
+    : state.results.filter(r => r.status === state.filter);
+
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:32px; color:var(--text-muted);">No shifts match this filter.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(r => {
+    const badge = r.status === 'flag' ? '<span class="badge flag">Flag</span>'
+              : r.status === 'warn' ? '<span class="badge warn">Warn</span>'
+              : '<span class="badge clean">Clean</span>';
+    const sched = r.schedIn || r.schedOut
+      ? `<span class="mono">${fmtTime(r.schedIn)} – ${fmtTime(r.schedOut)}</span>`
+      : '—';
+    const punched = r.clockIn || r.clockOut
+      ? `<span class="mono">${fmtTime(r.clockIn)} – ${fmtTime(r.clockOut)}</span>${r.edited ? ' <span class="badge warn" style="font-size:0.62rem; padding:1px 5px;">EDIT</span>' : ''}`
+      : '—';
+    const itin = (r.itDepart || r.itRTS || r.itLast)
+      ? `<span class="mono">${fmtTime(r.itDepart)} → ${fmtTime(r.itRTS || r.itLast)}</span>`
+      : '—';
+    const hrs = r.hours != null ? r.hours.toFixed(2) : '—';
+    const findings = r.findings.length
+      ? `<ul class="findings">${r.findings.map(f => `<li class="f-${f.sev}">${escapeHtml(f.msg)}</li>`).join('')}</ul>`
+      : '<span style="color:var(--text-muted); font-size:0.78rem;">No issues</span>';
+    return `<tr>
+      <td>${badge}</td>
+      <td class="name">${escapeHtml(r.employee || '—')}</td>
+      <td>${escapeHtml(r.date || '—')}</td>
+      <td>${sched}</td>
+      <td>${punched}</td>
+      <td>${itin}</td>
+      <td class="mono">${hrs}</td>
+      <td>${findings}</td>
+    </tr>`;
+  }).join('');
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// --- Filters ---
+document.querySelectorAll('.filter-pill').forEach(p => {
+  p.addEventListener('click', () => {
+    document.querySelectorAll('.filter-pill').forEach(x => x.classList.remove('active'));
+    p.classList.add('active');
+    state.filter = p.dataset.filter;
+    renderResults();
+  });
+});
+
+// --- Export ---
+document.getElementById('export').addEventListener('click', () => {
+  if (!state.results.length) return;
+  const headers = ['Status','Employee','Date','Scheduled In','Scheduled Out','Clock In','Clock Out','Edited','Hours','Itinerary Depart','Itinerary RTS','Findings'];
+  const rows = state.results.map(r => [
+    r.status, r.employee, r.date,
+    fmtTime(r.schedIn), fmtTime(r.schedOut),
+    fmtTime(r.clockIn), fmtTime(r.clockOut),
+    r.edited ? 'Y' : 'N',
+    r.hours != null ? r.hours.toFixed(2) : '',
+    fmtTime(r.itDepart), fmtTime(r.itRTS || r.itLast),
+    r.findings.map(f => `[${f.sev}] ${f.msg}`).join(' | '),
+  ]);
+  const csv = [headers, ...rows].map(r => r.map(csvEscape).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `timecard-audit-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+function csvEscape(v) {
+  v = v == null ? '' : String(v);
+  if (/[",\n]/.test(v)) return `"${v.replace(/"/g, '""')}"`;
+  return v;
+}
+
+document.getElementById('run').addEventListener('click', runAudit);
+</script>
+</body>
+</html>
